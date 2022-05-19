@@ -14,20 +14,26 @@ dp = Dispatcher(bot)
 
 
 def bot_answer():
-    shops = ''
-    count = 1
-    table = get_table(count)
-    while table[0] != date.today():
-        count += 1
-        table = get_table(count)
-    values = table[1:].sort()
-    return f'И так, в то время, как курс центробанка составляет {values[0]}'
+    shops = get_table(1)
+    if shops.pop("Дата") != str(date.today()):
+        table = get_table(2)
+        shops.pop("Дата")
+    shops = dict(sorted(shops.items(), key=lambda x: x[1]))
+    print(shops)
+    answer = f'И так, в то время, как курс ЦБ РФ составляет {shops.pop("ЦБ РФ")} ₽ за $, ближе всех к нему подобрался \
+<b>{list(shops.keys())[0]}</b> с курсом <b>{list(shops.values())[0]}</b> ₽. \nНа <b>Aliexpress</b> курс составляет \
+<b>{shops["AliExpress"]}</b> ₽.\n\nВесь список в порядке возрастания курса выглядит следующим образом: \n'
+    for k, v in shops.items():
+        answer += f"{k}:  {v} ₽\n"
+
+    return answer
 
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
-    await message.reply('Приветствую. Моя единственная функция - выводить курс доллара на китайских торговых \
-    площадках. Для ее выполнения, введите слово "Курс" без кавычек')
+    # await message.reply('Приветствую. Моя единственная функция - выводить курс доллара на китайских торговых \
+    #     площадках. Для ее выполнения, введите слово "Курс" без кавычек')
+    await message.answer(bot_answer(), parse_mode=types.ParseMode.HTML)
 
 
 @dp.message_handler()
