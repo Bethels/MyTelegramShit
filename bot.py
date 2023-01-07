@@ -13,26 +13,47 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-def bot_answer():
-    shops = get_table(1)
-    if shops.pop("Дата") != str(date.today()):
-        table = get_table(2)
-        shops.pop("Дата")
+def central_bank():
+    day = 1
+    table = get_table(day)
+    cb_rate = table["ЦБ РФ"]
+    add = '.'
+    if cb_rate == '':
+        while cb_rate == '':
+            day += 1
+            table = get_table(day)
+            cb_rate = table["ЦБ РФ"]
+        cb_date = table["Дата"]
+        add = f'(последнее обновление за {cb_date}, скорее всего из-за выходных, ведь биржа простаивает)'
+
+    answer = f'Курс центробанка составляет {cb_rate}₽ ' + add
+    return answer
+
+
+def get_shops():
+    day = 1
+    add = ''
+    shops = get_table(day)
+    if shops["Дата"] != str(date.today()):
+        table = get_table(day + 1)
+        add = '(за сегодня данных еще нет)'
+        # shops.pop("Дата")
     shops = dict(sorted(shops.items(), key=lambda x: x[1]))
-    print(shops)
-    answer = f'И так, в то время, как курс ЦБ РФ составляет {shops.pop("ЦБ РФ")} ₽ за $, ближе всех к нему подобрался \
-<b>{list(shops.keys())[0]}</b> с курсом <b>{list(shops.values())[0]}</b> ₽. \nНа <b>Aliexpress</b> курс составляет \
-<b>{shops["AliExpress"]}</b> ₽.\n\nВесь список в порядке возрастания курса выглядит следующим образом: \n'
+    shops.pop("ЦБ РФ")
+    answer = f'И так, на {shops.pop("Дата")} {add}, самый выгодный магазин - <b>{list(shops.keys())[0]}</b> с курсом ' \
+             f'<b>{list(shops.values())[0]}</b> ₽. \nНа <b>Aliexpress</b> курс составляет <b> {shops["Aliexpress.ru"]}' \
+             f'</b> ₽.\n\n{central_bank()}\n\nВесь список в порядке возрастания курса выглядит следующим образом:\n'
     for k, v in shops.items():
         answer += f"{k}:  {v} ₽\n"
-
     return answer
+
+
+def bot_answer():
+    return get_shops()
 
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
-    # await message.reply('Приветствую. Моя единственная функция - выводить курс доллара на китайских торговых \
-    #     площадках. Для ее выполнения, введите слово "Курс" без кавычек')
     await message.answer(bot_answer(), parse_mode=types.ParseMode.HTML)
 
 
