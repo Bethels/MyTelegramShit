@@ -12,9 +12,10 @@ def table_check(table):
 
 
 def get_table(day):
-    columns = 6
+    columns = 10
     cells = [i.text for i in soup.find_all(class_='b-tabcurr__td')]
     cells = [cells[i] for i in range((day - 1) * columns, day * columns)]
     headers = [i.text for i in soup.find_all(class_='b-tabcurr__th')]
-    result = dict(zip(cells, headers))
-    return dict(zip(headers, cells))
+    result = dict(zip(headers, cells))
+    return result
+
